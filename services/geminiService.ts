@@ -1,9 +1,28 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Safely access API key to prevent crashes in environments where process is undefined
+// This handles cases where vite/webpack might not replace process.env correctly in some configs
+const getApiKey = () => {
+  try {
+    if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+      return process.env.API_KEY;
+    }
+  } catch (e) {
+    // Ignore error if process is not defined
+  }
+  return '';
+};
+
+const apiKey = getApiKey();
+const ai = new GoogleGenAI({ apiKey });
 
 export const getGeminiContent = async (prompt: string, useSearch: boolean = false): Promise<string> => {
   try {
+    if (!apiKey) {
+      console.warn("API Key is missing. AI features will not work.");
+      return "AI content unavailable. Please configure API Key.";
+    }
+
     const config: any = {
       model: useSearch ? 'gemini-2.5-flash' : 'gemini-2.5-flash',
     };

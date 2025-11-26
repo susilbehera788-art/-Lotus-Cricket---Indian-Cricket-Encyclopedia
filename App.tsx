@@ -1,8 +1,52 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { HashRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Menu, X, Phone, Mail, MapPin, ExternalLink, Trophy, Users, History, AlertTriangle, Building2, Home as HomeIcon, Gamepad2, Dice5, Disc, Target, Box, Grid3X3, Star, HelpCircle, Footprints, Shield, PlayCircle } from 'lucide-react';
+import { HashRouter as Router, Routes, Route, Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Menu, X, Phone, Mail, MapPin, ExternalLink, Trophy, Users, History, AlertTriangle, Building2, Home as HomeIcon, Gamepad2, Dice5, Disc, Target, Box, Grid3X3, Star, HelpCircle, Footprints, Shield, PlayCircle, ArrowDown, ChevronRight, Dna, BarChart3, Newspaper, User, Search, Filter, Award } from 'lucide-react';
 import AdPlaceholder from './components/AdPlaceholder';
 import AIContentCard from './components/AIContentCard';
+
+// --- DATA ---
+
+const PLAYERS_DB = {
+  legends: [
+    { name: "Sachin Tendulkar", role: "Right-hand Bat", imgColor: "bg-blue-600" },
+    { name: "MS Dhoni", role: "Wicketkeeper Bat", imgColor: "bg-yellow-500" },
+    { name: "Virat Kohli", role: "Right-hand Bat", imgColor: "bg-red-600" },
+    { name: "Kapil Dev", role: "All-rounder", imgColor: "bg-orange-600" },
+    { name: "Sunil Gavaskar", role: "Right-hand Bat", imgColor: "bg-indigo-600" },
+    { name: "Rahul Dravid", role: "Right-hand Bat", imgColor: "bg-slate-600" },
+    { name: "Sourav Ganguly", role: "Left-hand Bat", imgColor: "bg-blue-800" },
+    { name: "Anil Kumble", role: "Leg Spinner", imgColor: "bg-cyan-700" },
+    { name: "Virender Sehwag", role: "Right-hand Bat", imgColor: "bg-orange-500" },
+    { name: "Yuvraj Singh", role: "All-rounder", imgColor: "bg-purple-600" },
+    { name: "Zaheer Khan", role: "Left-arm Fast", imgColor: "bg-teal-700" },
+    { name: "Mithali Raj", role: "Right-hand Bat", imgColor: "bg-pink-600" },
+    { name: "Jhulan Goswami", role: "Right-arm Fast", imgColor: "bg-emerald-600" },
+  ],
+  men: [
+    { name: "Rohit Sharma", role: "Captain / Batter", imgColor: "bg-blue-500" },
+    { name: "Jasprit Bumrah", role: "Fast Bowler", imgColor: "bg-blue-700" },
+    { name: "Ravindra Jadeja", role: "All-rounder", imgColor: "bg-yellow-600" },
+    { name: "Hardik Pandya", role: "All-rounder", imgColor: "bg-indigo-500" },
+    { name: "Shubman Gill", role: "Batter", imgColor: "bg-sky-500" },
+    { name: "Rishabh Pant", role: "Wicketkeeper", imgColor: "bg-red-500" },
+    { name: "Mohammed Shami", role: "Fast Bowler", imgColor: "bg-purple-700" },
+    { name: "KL Rahul", role: "Batter", imgColor: "bg-slate-500" },
+    { name: "Yashasvi Jaiswal", role: "Batter", imgColor: "bg-pink-500" },
+    { name: "Mohammed Siraj", role: "Fast Bowler", imgColor: "bg-blue-800" },
+    { name: "R Ashwin", role: "Spinner", imgColor: "bg-orange-400" },
+    { name: "Suryakumar Yadav", role: "Batter", imgColor: "bg-cyan-600" },
+  ],
+  women: [
+    { name: "Harmanpreet Kaur", role: "Captain / All-rounder", imgColor: "bg-blue-600" },
+    { name: "Smriti Mandhana", role: "Left-hand Bat", imgColor: "bg-pink-500" },
+    { name: "Jemimah Rodrigues", role: "Batter", imgColor: "bg-purple-500" },
+    { name: "Shafali Verma", role: "Batter", imgColor: "bg-orange-500" },
+    { name: "Deepti Sharma", role: "All-rounder", imgColor: "bg-teal-600" },
+    { name: "Renuka Singh", role: "Fast Bowler", imgColor: "bg-blue-400" },
+    { name: "Richa Ghosh", role: "Wicketkeeper", imgColor: "bg-red-400" },
+    { name: "Pooja Vastrakar", role: "All-rounder", imgColor: "bg-indigo-600" },
+  ]
+};
 
 // --- GAMES COMPONENTS ---
 
@@ -13,7 +57,7 @@ const LudoClassic: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [pawnPosition, setPawnPosition] = useState(-1); 
   const [message, setMessage] = useState("Roll 6 to start!");
   const [lastRoll, setLastRoll] = useState(0);
-  const [showTutorial, setShowTutorial] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(true);
 
   // Coordinate path for Blue Player (Bottom-Left Base)
   // Coordinates are [row, col] on a 15x15 grid (0-14)
@@ -156,15 +200,19 @@ const LudoClassic: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center p-2 md:p-4 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center p-2 md:p-4 font-sans relative overflow-hidden">
       
+      {/* Background Decor */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-200/30 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-200/30 rounded-full blur-3xl pointer-events-none"></div>
+
       {/* Top Bar */}
-      <div className="w-full max-w-xl flex justify-between items-center mb-6 px-2">
+      <div className="w-full max-w-xl flex justify-between items-center mb-6 px-2 z-10">
         <button onClick={onBack} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-bold bg-white px-4 py-2 rounded-full shadow-sm border hover:bg-gray-50 transition">
            &larr; Exit
         </button>
         <div className="flex items-center gap-2">
-           <h2 className="text-2xl font-black text-blue-900 tracking-tight">LUDO CLASSIC</h2>
+           <h2 className="text-2xl font-black text-blue-900 tracking-tight drop-shadow-sm">LUDO CLASSIC</h2>
         </div>
         <button onClick={() => setShowTutorial(true)} className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-bold bg-white px-4 py-2 rounded-full shadow-sm border hover:bg-blue-50 transition">
            <HelpCircle size={20} /> <span className="hidden sm:inline">How to Play</span>
@@ -173,72 +221,86 @@ const LudoClassic: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
       {/* Tutorial Overlay */}
       {showTutorial && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-           <div className="bg-white rounded-[2rem] shadow-2xl max-w-md w-full overflow-hidden relative border-4 border-white transform transition-all scale-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-300">
+           <div className="bg-gradient-to-br from-indigo-600 via-blue-600 to-purple-700 rounded-[2.5rem] shadow-2xl max-w-sm w-full overflow-hidden relative border-[6px] border-white/20 ring-4 ring-black/10 flex flex-col max-h-[90vh]">
               
+              <button 
+                onClick={() => setShowTutorial(false)} 
+                className="absolute top-4 right-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full backdrop-blur-md transition z-20"
+              >
+                <X size={20} strokeWidth={3} />
+              </button>
+
               {/* Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-center">
-                 <h2 className="text-3xl font-black text-white tracking-wide uppercase drop-shadow-md">Game Guide</h2>
-                 <p className="text-blue-100 text-sm mt-1">Master the board in 4 steps!</p>
-                 <button 
-                  onClick={() => setShowTutorial(false)} 
-                  className="absolute top-4 right-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full backdrop-blur-md transition"
-                >
-                  <X size={20} />
-                </button>
+              <div className="text-center pt-8 pb-4 relative z-10 shrink-0">
+                 <h2 className="text-3xl font-black text-white tracking-wider drop-shadow-lg font-game">HOW TO PLAY</h2>
+                 <p className="text-blue-100 text-sm font-medium opacity-90 tracking-wide mt-1">Master the board in 4 steps!</p>
               </div>
 
               {/* Steps Body */}
-              <div className="p-6 space-y-4 bg-gray-50 max-h-[60vh] overflow-y-auto hide-scrollbar">
+              <div className="px-6 pb-4 space-y-3 overflow-y-auto hide-scrollbar relative z-10">
                  
-                 {/* Step 1 */}
-                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-start gap-4 hover:shadow-md transition-shadow">
-                    <div className="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white shadow-lg rotate-3">
+                 {/* Step 1: Roll Dice */}
+                 <div className="bg-white rounded-2xl p-3 flex items-center gap-4 shadow-xl border-b-4 border-gray-100 transform hover:scale-[1.02] transition-transform">
+                    <div className="w-12 h-12 shrink-0 rounded-xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white shadow-lg rotate-3 border-2 border-red-200">
                        <Dice5 size={24} strokeWidth={2.5} />
                     </div>
                     <div>
-                       <h3 className="font-bold text-gray-800 text-lg">1. Roll the Dice</h3>
-                       <p className="text-gray-500 text-sm leading-relaxed mt-1">
-                         Tap the dice block. You need a <span className="font-bold text-red-500 bg-red-50 px-1 rounded">6</span> to unlock your pawn from the base!
+                       <h3 className="font-extrabold text-gray-800 text-base uppercase tracking-tight">1. Roll the Dice</h3>
+                       <p className="text-gray-600 text-xs font-semibold mt-0.5">
+                         You need a <span className="text-red-600 font-black">6</span> to start!
                        </p>
                     </div>
                  </div>
 
-                 {/* Step 2 */}
-                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-start gap-4 hover:shadow-md transition-shadow">
-                    <div className="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white shadow-lg -rotate-3">
+                 {/* Connector Arrow */}
+                 <div className="flex justify-center -my-2 opacity-60">
+                    <ArrowDown className="text-white drop-shadow-md" size={20} strokeWidth={3} />
+                 </div>
+
+                 {/* Step 2: Move Token */}
+                 <div className="bg-white rounded-2xl p-3 flex items-center gap-4 shadow-xl border-b-4 border-gray-100 transform hover:scale-[1.02] transition-transform">
+                    <div className="w-12 h-12 shrink-0 rounded-xl bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center text-white shadow-lg -rotate-2 border-2 border-blue-200">
                        <Footprints size={24} strokeWidth={2.5} />
                     </div>
                     <div>
-                       <h3 className="font-bold text-gray-800 text-lg">2. Move Token</h3>
-                       <p className="text-gray-500 text-sm leading-relaxed mt-1">
-                         Move clockwise along the path. Follow the arrow direction to circle the board.
+                       <h3 className="font-extrabold text-gray-800 text-base uppercase tracking-tight">2. Move Your Token</h3>
+                       <p className="text-gray-600 text-xs font-semibold mt-0.5">
+                         Follow the path & arrows.
                        </p>
                     </div>
                  </div>
 
-                 {/* Step 3 */}
-                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-start gap-4 hover:shadow-md transition-shadow">
-                    <div className="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center text-white shadow-lg rotate-2">
+                 <div className="flex justify-center -my-2 opacity-60">
+                    <ArrowDown className="text-white drop-shadow-md" size={20} strokeWidth={3} />
+                 </div>
+
+                 {/* Step 3: Enter Safe Zone */}
+                 <div className="bg-white rounded-2xl p-3 flex items-center gap-4 shadow-xl border-b-4 border-gray-100 transform hover:scale-[1.02] transition-transform">
+                    <div className="w-12 h-12 shrink-0 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center text-white shadow-lg rotate-2 border-2 border-amber-200">
                        <Shield size={24} strokeWidth={2.5} />
                     </div>
                     <div>
-                       <h3 className="font-bold text-gray-800 text-lg">3. Safe Zones</h3>
-                       <p className="text-gray-500 text-sm leading-relaxed mt-1">
-                         Land on <span className="font-bold text-amber-500 bg-amber-50 px-1 rounded">Stars</span> to stay safe. Opponents cannot cut your pawn here.
+                       <h3 className="font-extrabold text-gray-800 text-base uppercase tracking-tight">3. Enter Safe Zone</h3>
+                       <p className="text-gray-600 text-xs font-semibold mt-0.5">
+                         Land on <Star size={10} className="inline text-amber-500 fill-amber-500" /> to stay safe!
                        </p>
                     </div>
                  </div>
 
-                 {/* Step 4 */}
-                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-start gap-4 hover:shadow-md transition-shadow">
-                    <div className="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white shadow-lg -rotate-1">
+                 <div className="flex justify-center -my-2 opacity-60">
+                    <ArrowDown className="text-white drop-shadow-md" size={20} strokeWidth={3} />
+                 </div>
+
+                 {/* Step 4: Reach Home */}
+                 <div className="bg-white rounded-2xl p-3 flex items-center gap-4 shadow-xl border-b-4 border-gray-100 transform hover:scale-[1.02] transition-transform">
+                    <div className="w-12 h-12 shrink-0 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white shadow-lg -rotate-1 border-2 border-green-200">
                        <Trophy size={24} strokeWidth={2.5} />
                     </div>
                     <div>
-                       <h3 className="font-bold text-gray-800 text-lg">4. Reach Home</h3>
-                       <p className="text-gray-500 text-sm leading-relaxed mt-1">
-                         Complete the full lap and enter the <span className="font-bold text-green-600">Home Triangle</span> to win!
+                       <h3 className="font-extrabold text-gray-800 text-base uppercase tracking-tight">4. Reach Home</h3>
+                       <p className="text-gray-600 text-xs font-semibold mt-0.5">
+                         Get to the center triangle to win.
                        </p>
                     </div>
                  </div>
@@ -246,20 +308,27 @@ const LudoClassic: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               </div>
 
               {/* Footer Action */}
-              <div className="p-5 bg-white border-t border-gray-100 flex justify-center pb-8">
+              <div className="p-5 pt-4 bg-transparent flex justify-center pb-8 z-10 shrink-0">
                  <button 
                    onClick={() => setShowTutorial(false)} 
-                   className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                   className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-black text-xl py-3 px-6 rounded-2xl shadow-[0_4px_0_rgb(180,83,9)] hover:shadow-[0_2px_0_rgb(180,83,9)] hover:translate-y-[2px] transition-all flex items-center justify-center gap-2 uppercase tracking-wider active:scale-95"
                  >
-                    <PlayCircle size={20} /> Let's Play!
+                    <PlayCircle size={24} fill="white" className="text-orange-600" /> Play Now
                  </button>
               </div>
+              
+              {/* Background Decoration */}
+              <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+                  <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] bg-white/10 rounded-full blur-3xl"></div>
+                  <div className="absolute bottom-[-10%] right-[-10%] w-[70%] h-[70%] bg-purple-500/20 rounded-full blur-3xl"></div>
+              </div>
+
            </div>
         </div>
       )}
 
       {/* Game Board Container */}
-      <div className="bg-white p-2 md:p-3 rounded-2xl shadow-2xl border-4 border-white ring-4 ring-blue-100 relative">
+      <div className="bg-white p-2 md:p-3 rounded-2xl shadow-2xl border-4 border-white ring-4 ring-blue-100 relative z-0">
         <div 
           className="grid grid-cols-15 grid-rows-15 bg-gray-900 gap-[1px] border-2 border-gray-900 rounded-lg overflow-hidden"
           style={{ 
@@ -285,14 +354,14 @@ const LudoClassic: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       </div>
 
       {/* Controls */}
-      <div className="mt-8 flex flex-col items-center gap-4 w-full max-w-md">
-         <div className="text-lg font-bold text-blue-800 bg-white/80 backdrop-blur px-8 py-3 rounded-2xl shadow-sm border border-white w-full text-center">
+      <div className="mt-6 flex flex-col items-center gap-4 w-full max-w-md z-10">
+         <div className="text-lg font-bold text-blue-800 bg-white/90 backdrop-blur px-8 py-3 rounded-2xl shadow-sm border border-white w-full text-center">
             {message}
          </div>
          
          <div className="flex items-center gap-6 justify-center w-full">
             <div className="relative group cursor-pointer" onClick={rollDice}>
-               <div className={`w-24 h-24 bg-gradient-to-br from-white to-gray-100 rounded-2xl border-4 border-white flex items-center justify-center shadow-xl text-6xl text-gray-800 transition-all duration-300 ${isRolling ? 'animate-spin' : 'group-hover:scale-105 group-hover:-rotate-3'}`}>
+               <div className={`w-20 h-20 bg-gradient-to-br from-white to-gray-100 rounded-2xl border-4 border-white flex items-center justify-center shadow-xl text-5xl text-gray-800 transition-all duration-300 ${isRolling ? 'animate-spin' : 'group-hover:scale-105 group-hover:-rotate-3'}`}>
                   {/* Unicode Dice Faces */}
                   {diceValue === 1 && '⚀'}
                   {diceValue === 2 && '⚁'}
@@ -312,7 +381,7 @@ const LudoClassic: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             <button 
               onClick={rollDice} 
               disabled={isRolling || (pawnPosition === playerPath.length - 1)}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-4 px-12 rounded-2xl shadow-lg transform transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-xl tracking-wider border-b-4 border-blue-900 flex items-center gap-2"
+              className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-4 px-6 rounded-2xl shadow-lg transform transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-xl tracking-wider border-b-4 border-blue-900 flex items-center justify-center gap-2"
             >
               {pawnPosition === playerPath.length - 1 ? 'GAME OVER' : 'ROLL DICE'}
             </button>
@@ -328,7 +397,7 @@ const LudoClassic: React.FC<{ onBack: () => void }> = ({ onBack }) => {
          )}
       </div>
 
-      <div className="mt-4 w-full max-w-md opacity-80 hover:opacity-100 transition">
+      <div className="mt-4 w-full max-w-md opacity-90 hover:opacity-100 transition z-10">
          <AdPlaceholder size="leaderboard" className="scale-90 origin-center" />
       </div>
     </div>
@@ -382,29 +451,31 @@ const SpinGo: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   };
 
   return (
-    <div className="bg-white p-8 rounded-xl shadow-lg max-w-md mx-auto text-center border-t-4 border-india-blue">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center justify-center gap-2"><Dice5 className="text-india-orange" /> SpinGo Cricket</h2>
-      
-      <div className="flex justify-center gap-4 mb-8">
-        {slots.map((s, i) => (
-          <div key={i} className="w-20 h-24 bg-gray-100 border-2 border-gray-300 rounded-lg flex items-center justify-center text-4xl shadow-inner">
-            {s}
-          </div>
-        ))}
-      </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+      <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full mx-auto text-center border-t-4 border-india-blue relative">
+        <button onClick={onBack} className="absolute top-2 left-2 p-2 text-gray-400 hover:text-gray-600">&larr; Back</button>
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center justify-center gap-2"><Dice5 className="text-india-orange" /> SpinGo Cricket</h2>
+        
+        <div className="flex justify-center gap-4 mb-8">
+          {slots.map((s, i) => (
+            <div key={i} className="w-20 h-24 bg-gray-100 border-2 border-gray-300 rounded-lg flex items-center justify-center text-4xl shadow-inner animate-pulse">
+              {s}
+            </div>
+          ))}
+        </div>
 
-      <div className="mb-6 h-8 text-lg font-semibold text-india-blue">{message}</div>
-      <div className="mb-6 text-gray-600">Score: <span className="font-bold text-black">{score}</span></div>
+        <div className="mb-6 h-8 text-lg font-semibold text-india-blue">{message}</div>
+        <div className="mb-6 text-gray-600">Score: <span className="font-bold text-black">{score}</span></div>
 
-      <div className="flex gap-4 justify-center">
-        <button onClick={onBack} className="px-4 py-2 text-gray-500 hover:text-gray-700">Exit</button>
-        <button 
-          onClick={spin} 
-          disabled={spinning}
-          className="bg-india-orange text-white px-8 py-3 rounded-full font-bold shadow-md hover:bg-orange-600 disabled:opacity-50 transition transform hover:scale-105"
-        >
-          {spinning ? 'Spinning...' : 'SPIN NOW'}
-        </button>
+        <div className="flex gap-4 justify-center">
+          <button 
+            onClick={spin} 
+            disabled={spinning}
+            className="w-full bg-india-orange text-white px-8 py-3 rounded-full font-bold shadow-md hover:bg-orange-600 disabled:opacity-50 transition transform hover:scale-105"
+          >
+            {spinning ? 'Spinning...' : 'SPIN NOW'}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -431,596 +502,138 @@ const WinWheel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     setSpinning(true);
     setPrize('Who will it be? ...');
     
-    // Add multiple rotations (at least 4 full spins = 1440deg) + random segment
-    const newRotation = rotation + 1440 + Math.floor(Math.random() * 360); 
-    setRotation(newRotation);
+    // Random rotation between 720 and 1440 degrees (2 to 4 full spins) plus segment offset
+    const spins = Math.floor(Math.random() * 5) + 5; 
+    const randomDegree = Math.floor(Math.random() * 360);
+    const totalRotation = rotation + (spins * 360) + randomDegree;
+    
+    setRotation(totalRotation);
 
     setTimeout(() => {
-      setSpinning(false);
-      const normalizedRotation = newRotation % 360;
-      const segmentAngle = 360 / segments.length;
-      
-      // Calculate winning index based on rotation.
-      // 0deg is top in CSS conic gradient logic usually, but let's assume standard behavior:
-      // If we rotate clockwise, the item at the top changes counter-clockwise relative to the wheel start.
-      // This formula approximates the segment under the pointer at the top.
-      const winningIndex = Math.floor(((360 - (normalizedRotation % 360)) % 360) / segmentAngle);
-      
-      setPrize(`Your favourite cricketer is: ${segments[winningIndex]}`);
+        setSpinning(false);
+        const resultIndex = Math.floor(Math.random() * segments.length);
+        setPrize(`You got: ${segments[resultIndex]}!`);
     }, 3000);
   };
 
   return (
-    <div className="bg-white p-8 rounded-xl shadow-lg max-w-md mx-auto text-center border-t-4 border-india-green">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center justify-center gap-2"><Disc className="text-india-green" /> Star Player Wheel</h2>
-      
-      <div className="relative w-64 h-64 mx-auto mb-8">
-        {/* Pointer */}
-        <div className="absolute top-0 left-1/2 -ml-4 -mt-2 z-10 w-0 h-0 border-l-[16px] border-l-transparent border-r-[16px] border-r-transparent border-t-[20px] border-t-red-600"></div>
+    <div className="min-h-screen bg-indigo-50 flex flex-col items-center justify-center p-4">
+      <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md text-center relative overflow-hidden">
+        <button onClick={onBack} className="absolute top-4 left-4 z-10 bg-gray-100 p-2 rounded-full hover:bg-gray-200"><X size={16}/></button>
+        <h2 className="text-2xl font-black text-indigo-900 mb-2">CRICKET WHEEL</h2>
+        <p className="text-sm text-gray-500 mb-8">Discover your inner legend</p>
         
-        {/* Wheel */}
-        <div 
-          className="w-full h-full rounded-full border-8 border-gray-200 overflow-hidden relative transition-transform duration-[3000ms] cubic-bezier(0.25, 0.1, 0.25, 1)"
-          style={{ 
-            transform: `rotate(${rotation}deg)`,
-            background: 'conic-gradient(#ff9933 0deg 45deg, #ffffff 45deg 90deg, #138808 90deg 135deg, #0033cc 135deg 180deg, #ff9933 180deg 225deg, #ffffff 225deg 270deg, #138808 270deg 315deg, #0033cc 315deg 360deg)'
-          }}
-        >
-          {/* Simple overlay to make it look like a wheel */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-16 h-16 bg-white rounded-full shadow-md z-10 flex items-center justify-center text-xs font-bold text-gray-400">
-               LOTUS
-            </div>
+        <div className="relative w-64 h-64 mx-auto mb-8">
+          {/* Pointer */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-20 w-8 h-8 text-red-500">
+             <div className="w-0 h-0 border-l-[10px] border-l-transparent border-t-[20px] border-t-red-600 border-r-[10px] border-r-transparent"></div>
+          </div>
+          
+          {/* Wheel */}
+          <div 
+            className="w-full h-full rounded-full border-8 border-indigo-200 shadow-inner relative transition-transform duration-[3000ms] cubic-bezier(0.2, 0.8, 0.2, 1)"
+            style={{ transform: `rotate(${rotation}deg)` }}
+          >
+             {segments.map((seg, i) => (
+                <div 
+                  key={i} 
+                  className="absolute w-full h-full top-0 left-0 flex justify-center pt-2 text-[10px] font-bold text-indigo-900"
+                  style={{ transform: `rotate(${i * (360/segments.length)}deg)` }}
+                >
+                  <span className="mt-2">{i+1}</span>
+                </div>
+             ))}
+             <div className="absolute inset-0 rounded-full border-[32px] border-transparent border-t-indigo-100 opacity-30"></div>
+             <div className="absolute inset-0 rounded-full border-[32px] border-transparent border-r-blue-100 opacity-30 transform rotate-90"></div>
+          </div>
+          
+          {/* Center Cap */}
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white rounded-full shadow-lg flex items-center justify-center font-bold text-indigo-600 z-10 border-4 border-indigo-50">
+             LOTUS
           </div>
         </div>
-      </div>
 
-      <div className="mb-6 text-xl font-bold text-india-blue min-h-[3rem] px-4 py-2 bg-blue-50 rounded-lg flex items-center justify-center">
-        {prize}
-      </div>
+        <div className="bg-indigo-50 p-4 rounded-lg mb-6">
+           <p className="font-bold text-indigo-800 text-lg animate-pulse">{prize}</p>
+        </div>
 
-      <div className="flex gap-4 justify-center">
-        <button onClick={onBack} className="px-4 py-2 text-gray-500 hover:text-gray-700">Exit</button>
         <button 
           onClick={spinWheel} 
           disabled={spinning}
-          className="bg-india-green text-white px-8 py-3 rounded-full font-bold shadow-md hover:bg-green-700 disabled:opacity-50 transition transform hover:scale-105"
+          className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-95 disabled:opacity-50"
         >
-          SPIN
+          {spinning ? 'SPINNING...' : 'SPIN WHEEL'}
         </button>
       </div>
     </div>
   );
 };
 
-const TapScoreCricket: React.FC<{ onBack: () => void }> = ({ onBack }) => {
-  const [ballPos, setBallPos] = useState(0);
-  const [direction, setDirection] = useState(1); // 1 = right, -1 = left
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [score, setScore] = useState(0);
-  const [wickets, setWickets] = useState(0);
-  const [lastResult, setLastResult] = useState('Tap Start to Play');
-  const requestRef = useRef<number>(0);
-  const speedRef = useRef<number>(2);
+// --- LAYOUT COMPONENTS ---
 
-  const moveBall = () => {
-    setBallPos(prev => {
-      const next = prev + speedRef.current * direction;
-      if (next >= 100 || next <= 0) {
-        setDirection(d => d * -1);
-        return prev; // Clamp for one frame
-      }
-      return next;
-    });
-    requestRef.current = requestAnimationFrame(moveBall);
-  };
-
-  // Toggle direction properly in the effect if needed, but simple bounce logic in setState is easier
-  // Actually, updating direction inside setBallPos callback is tricky. 
-  // Let's use a simpler useEffect for the loop.
-
-  useEffect(() => {
-    if (isPlaying) {
-      const interval = setInterval(() => {
-        setBallPos(prev => {
-          let next = prev + (2 * direction); // simplified logic
-          if (next >= 100) {
-            setDirection(-1);
-            next = 100;
-          } else if (next <= 0) {
-            setDirection(1);
-            next = 0;
-          }
-          return next;
-        });
-      }, 16); // ~60fps
-      return () => clearInterval(interval);
-    }
-  }, [isPlaying, direction]);
-
-  const startGame = () => {
-    setIsPlaying(true);
-    setScore(0);
-    setWickets(0);
-    setLastResult("Game On! Tap when marker is green.");
-  };
-
-  const tap = () => {
-    if (!isPlaying) {
-      startGame();
-      return;
-    }
-
-    // Logic: 40-60 is 6 runs (Green), 20-40 & 60-80 is 4 runs (Yellow), else Out
-    if (ballPos >= 45 && ballPos <= 55) {
-      setScore(s => s + 6);
-      setLastResult("HUGE SIX! 6️⃣");
-      speedRef.current += 0.5; // increase difficulty
-    } else if ((ballPos >= 30 && ballPos < 45) || (ballPos > 55 && ballPos <= 70)) {
-      setScore(s => s + 4);
-      setLastResult("Good Shot! 4️⃣");
-    } else {
-      setWickets(w => w + 1);
-      setLastResult("OUT! ☝️");
-      if (wickets >= 2) { // 3 wickets total
-        setIsPlaying(false);
-        setLastResult(`Game Over! Final Score: ${score}`);
-      }
-    }
-  };
-
-  return (
-    <div className="bg-white p-8 rounded-xl shadow-lg max-w-md mx-auto text-center border-t-4 border-red-500">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center justify-center gap-2"><Target className="text-red-600" /> Tap Score</h2>
-      
-      <div className="relative w-full h-12 bg-gray-200 rounded-full mb-8 overflow-hidden border-2 border-gray-400">
-        {/* Zones */}
-        <div className="absolute top-0 bottom-0 left-[30%] right-[30%] bg-yellow-200 opacity-50"></div>
-        <div className="absolute top-0 bottom-0 left-[45%] right-[45%] bg-green-500 opacity-60"></div>
-        
-        {/* Ball Marker */}
-        <div 
-          className="absolute top-1 bottom-1 w-4 bg-red-600 rounded-full shadow-md transition-none"
-          style={{ left: `${ballPos}%` }}
-        ></div>
-      </div>
-
-      <div className="flex justify-between items-center mb-6 px-4">
-        <div className="text-gray-700 font-bold">Score: {score}</div>
-        <div className="text-red-600 font-bold">Wickets: {wickets}/3</div>
-      </div>
-
-      <div className="mb-6 text-xl font-bold text-india-blue h-8">{lastResult}</div>
-
-      <div className="flex gap-4 justify-center">
-        <button onClick={onBack} className="px-4 py-2 text-gray-500 hover:text-gray-700">Exit</button>
-        <button 
-          onClick={tap} 
-          className={`px-8 py-3 rounded-full font-bold shadow-md transition transform active:scale-95 text-white ${isPlaying ? 'bg-red-600 hover:bg-red-700' : 'bg-india-blue hover:bg-blue-700'}`}
-        >
-          {isPlaying ? 'HIT!' : 'START MATCH'}
-        </button>
-      </div>
-      <p className="text-xs text-gray-400 mt-4">Tip: Hit in the green zone for 6, yellow for 4.</p>
-    </div>
-  );
-};
-
-const GamesPage: React.FC = () => {
-  const [activeGame, setActiveGame] = useState<string | null>(null);
-
-  if (activeGame === 'SpinGo') return <SpinGo onBack={() => setActiveGame(null)} />;
-  if (activeGame === 'WinWheel') return <WinWheel onBack={() => setActiveGame(null)} />;
-  if (activeGame === 'TapScore') return <TapScoreCricket onBack={() => setActiveGame(null)} />;
-  if (activeGame === 'LudoClassic') return <LudoClassic onBack={() => setActiveGame(null)} />;
-
-  return (
-    <div className="space-y-8">
-      <div className="text-center py-8">
-        <h1 className="text-4xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-3">
-          <Gamepad2 size={40} className="text-india-blue" /> 
-          Lotus Game Zone
-        </h1>
-        <p className="text-gray-600">Take a break and test your luck and skills!</p>
-      </div>
-
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Game 1 */}
-        <div 
-          onClick={() => setActiveGame('SpinGo')}
-          className="bg-white rounded-xl shadow-md overflow-hidden cursor-pointer hover:shadow-xl transition transform hover:-translate-y-1 group border border-gray-100"
-        >
-          <div className="h-40 bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center">
-            <Dice5 className="text-white w-16 h-16 group-hover:scale-110 transition duration-300" />
-          </div>
-          <div className="p-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-2">SpinGo</h3>
-            <p className="text-gray-600 text-sm">Spin the slots and match cricket icons to win!</p>
-            <div className="mt-4 text-india-orange font-semibold flex items-center gap-1 text-sm">Play Now &rarr;</div>
-          </div>
-        </div>
-
-        {/* Game 2 */}
-        <div 
-           onClick={() => setActiveGame('WinWheel')}
-           className="bg-white rounded-xl shadow-md overflow-hidden cursor-pointer hover:shadow-xl transition transform hover:-translate-y-1 group border border-gray-100"
-        >
-          <div className="h-40 bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center">
-            <Disc className="text-white w-16 h-16 group-hover:rotate-180 transition duration-700" />
-          </div>
-          <div className="p-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-2">WinWheel</h3>
-            <p className="text-gray-600 text-sm">Find your cricket soulmate!</p>
-            <div className="mt-4 text-india-green font-semibold flex items-center gap-1 text-sm">Play Now &rarr;</div>
-          </div>
-        </div>
-
-        {/* Game 3 */}
-        <div 
-           onClick={() => setActiveGame('TapScore')}
-           className="bg-white rounded-xl shadow-md overflow-hidden cursor-pointer hover:shadow-xl transition transform hover:-translate-y-1 group border border-gray-100"
-        >
-          <div className="h-40 bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center">
-            <Target className="text-white w-16 h-16 group-hover:scale-110 transition duration-300" />
-          </div>
-          <div className="p-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-2">Tap Score</h3>
-            <p className="text-gray-600 text-sm">Test your timing! Score boundaries.</p>
-            <div className="mt-4 text-india-blue font-semibold flex items-center gap-1 text-sm">Play Now &rarr;</div>
-          </div>
-        </div>
-
-        {/* Game 4: Ludo */}
-        <div 
-           onClick={() => setActiveGame('LudoClassic')}
-           className="bg-white rounded-xl shadow-md overflow-hidden cursor-pointer hover:shadow-xl transition transform hover:-translate-y-1 group border border-gray-100"
-        >
-          <div className="h-40 bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center relative overflow-hidden">
-             <Grid3X3 className="text-white w-16 h-16 group-hover:scale-110 transition duration-500" />
-          </div>
-          <div className="p-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-2">Ludo Classic</h3>
-            <p className="text-gray-600 text-sm">The authentic 2D board game experience.</p>
-            <div className="mt-4 text-yellow-600 font-semibold flex items-center gap-1 text-sm">Play Now &rarr;</div>
-          </div>
-        </div>
-      </div>
-
-      <AdPlaceholder size="leaderboard" />
-    </div>
-  );
-};
-
-// Pages
-const Home: React.FC = () => {
-  return (
-    <div className="space-y-8">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-india-blue to-blue-900 text-white p-8 rounded-2xl overflow-hidden shadow-xl">
-        <div className="relative z-10">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Welcome to Lotus Cricket</h1>
-          <p className="text-lg text-blue-100 max-w-2xl mb-6">
-            The ultimate encyclopedia for Indian Cricket. From the debut at Lord's in 1932 to the T20 glories of today. 
-            Explore history, stats, and real-time updates.
-          </p>
-          <div className="flex flex-wrap gap-4">
-            <Link to="/live" className="bg-india-orange hover:bg-orange-600 text-white px-6 py-2 rounded-full font-semibold transition">
-              Live Scores
-            </Link>
-            <Link to="/games" className="bg-white/10 hover:bg-white/20 backdrop-blur text-white px-6 py-2 rounded-full font-semibold transition flex items-center gap-2">
-              <Gamepad2 size={18} /> Game Zone
-            </Link>
-          </div>
-        </div>
-        <div className="absolute right-0 bottom-0 opacity-10">
-          <Trophy size={300} />
-        </div>
-      </section>
-
-      <AdPlaceholder size="leaderboard" />
-
-      {/* Live Updates Section */}
-      <section>
-        <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-          Latest Match Updates
-        </h2>
-        <AIContentCard 
-          title="Current Matches Involving India" 
-          prompt="What is the latest live score or result of the most recent Indian cricket match (Men or Women)? Provide a short summary including key performers. Use a concise format." 
-          useSearch={true}
-        />
-      </section>
-
-      {/* Featured Sections */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Link to="/players" className="group bg-white p-6 rounded-xl shadow-sm border hover:border-india-blue transition">
-          <Users className="text-india-blue mb-4" size={32} />
-          <h3 className="text-xl font-bold mb-2 group-hover:text-india-blue">Player Profiles</h3>
-          <p className="text-gray-600 text-sm">Detailed biographies of legends from Gavaskar to Tendulkar to Kohli.</p>
-        </Link>
-        <Link to="/tournaments" className="group bg-white p-6 rounded-xl shadow-sm border hover:border-india-blue transition">
-          <Trophy className="text-india-blue mb-4" size={32} />
-          <h3 className="text-xl font-bold mb-2 group-hover:text-india-blue">Tournaments</h3>
-          <p className="text-gray-600 text-sm">Ranji, Duleep, Irani Cup, and complete IPL records.</p>
-        </Link>
-        <Link to="/games" className="group bg-white p-6 rounded-xl shadow-sm border hover:border-india-blue transition">
-          <Gamepad2 className="text-india-blue mb-4" size={32} />
-          <h3 className="text-xl font-bold mb-2 group-hover:text-india-blue">Game Zone</h3>
-          <p className="text-gray-600 text-sm">Play SpinGo, WinWheel, and Tap Cricket for fun!</p>
-        </Link>
-      </div>
-
-       <div className="grid md:grid-cols-2 gap-8">
-          <AIContentCard 
-            title="On This Day in Indian Cricket" 
-            prompt="What significant event happened on this date in history regarding Indian cricket? If nothing specific, tell me a random interesting fact about Indian cricket history."
-            className="h-full"
-          />
-           <AIContentCard 
-            title="Trending News" 
-            prompt="What are the top 3 trending headlines in Indian cricket right now?"
-            useSearch={true}
-            className="h-full"
-          />
-       </div>
-    </div>
-  );
-};
-
-const HistoryPage: React.FC = () => {
-  return (
-    <div className="space-y-6">
-      <div className="bg-white p-8 rounded-xl shadow-sm border-l-4 border-india-blue">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">History of Indian Cricket (1932 - Present)</h1>
-        <p className="text-gray-600">A journey from the British Raj to becoming the global powerhouse of cricket.</p>
-      </div>
-      
-      <AdPlaceholder size="leaderboard" />
-
-      <AIContentCard 
-        title="1932-1950: The Beginning" 
-        prompt="Write a detailed summary of Indian cricket history from 1932 to 1950. Highlight the first test match, CK Nayudu, and the first victory."
-      />
-      
-      <AIContentCard 
-        title="1952-1982: Finding Feet & The Spin Quartet" 
-        prompt="Summarize Indian cricket from 1952 to 1982. Focus on the first series win, the emergence of the spin quartet (Bedi, Prasanna, Chandrasekhar, Venkataraghavan), and Sunil Gavaskar's debut."
-      />
-
-      <AdPlaceholder size="rectangle" className="float-right ml-6" />
-
-      <AIContentCard 
-        title="1983: The Turning Point" 
-        prompt="Write a detailed account of India's 1983 World Cup victory under Kapil Dev and its impact on the nation."
-      />
-
-      <AIContentCard 
-        title="1984-2000: Sachin Era & Match Fixing" 
-        prompt="Cover the period of 1984 to 2000 in Indian cricket. Discuss the 1985 World Championship of Cricket, the rise of Sachin Tendulkar, and the dark phase of the match-fixing scandal."
-      />
-
-      <AIContentCard 
-        title="2000-2011: The Golden Generation" 
-        prompt="Summarize the Sourav Ganguly captaincy era, the 2007 T20 World Cup win under Dhoni, and the 2011 ODI World Cup victory."
-      />
-
-      <AIContentCard 
-        title="2012-Present: Global Dominance" 
-        prompt="Discuss Indian cricket from 2012 to present. Rise of Virat Kohli, the dominance in Test cricket, 2013 Champions Trophy, and the growth of IPL talent."
-      />
-    </div>
-  );
-};
-
-const PlayersPage: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
-
-  const popularPlayers = ["Sachin Tendulkar", "Virat Kohli", "MS Dhoni", "Kapil Dev", "Sunil Gavaskar", "Rohit Sharma", "Jasprit Bumrah", "Mithali Raj", "Jhulan Goswami"];
-
-  return (
-    <div className="space-y-6">
-       <div className="bg-white p-6 rounded-xl shadow-sm">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">Player Profiles</h1>
-        <div className="flex gap-2">
-          <input 
-            type="text" 
-            placeholder="Search for any Indian cricketer (e.g. Rahul Dravid)..." 
-            className="flex-1 border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-india-blue"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && searchTerm) setSelectedPlayer(searchTerm);
-            }}
-          />
-          <button 
-            onClick={() => setSelectedPlayer(searchTerm)}
-            className="bg-india-blue text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-800 transition"
-          >
-            Search
-          </button>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <span className="text-sm text-gray-500 py-1">Popular:</span>
-          {popularPlayers.map(p => (
-            <button 
-              key={p}
-              onClick={() => { setSearchTerm(p); setSelectedPlayer(p); }}
-              className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-full transition"
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <AdPlaceholder size="leaderboard" />
-
-      {selectedPlayer ? (
-        <div className="space-y-6">
-          <AIContentCard 
-            title={`Profile: ${selectedPlayer}`}
-            prompt={`Create a detailed profile for Indian cricketer ${selectedPlayer}. Include: 
-            1. Full Name, Date of Birth, Birthplace.
-            2. Role (Batsman/Bowler/All-rounder).
-            3. International Debut and Retirement dates (Test, ODI, T20I).
-            4. Detailed Biography and Life Story.
-            5. Key Records and Achievements.
-            6. Career Stats Summary (approximate).`}
-            useSearch={true} // Use search for accurate stats
-          />
-        </div>
-      ) : (
-        <div className="text-center py-20 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-          <Users size={48} className="mx-auto text-gray-300 mb-4" />
-          <h3 className="text-gray-500 font-medium">Search for a player to view their full profile</h3>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const AssociationsPage: React.FC = () => {
-  return (
-    <div className="space-y-6">
-      <div className="bg-white p-6 rounded-xl shadow-sm">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Trusts & Associations</h1>
-        <p className="text-gray-600">Details of the governing bodies that manage cricket in India.</p>
-      </div>
-
-      <AIContentCard 
-        title="BCCI (Board of Control for Cricket in India)" 
-        prompt="Provide a detailed overview of the BCCI. Include its history (founded 1928), current key office bearers (President, Secretary), headquarters, and its role in global cricket."
-        useSearch={true}
-      />
-
-      <div className="grid md:grid-cols-2 gap-6">
-        <AIContentCard 
-          title="North & East Zone Associations" 
-          prompt="List key state cricket associations in North and East India (e.g., DDCA, CAB). Include their stadium names and history."
-        />
-        <AIContentCard 
-          title="West & South Zone Associations" 
-          prompt="List key state cricket associations in West and South India (e.g., MCA, TNCA, KSCA). Include their stadium names and history."
-        />
-      </div>
-      
-      <AdPlaceholder size="leaderboard" />
-    </div>
-  );
-};
-
-const TournamentsPage: React.FC = () => {
-  return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-800">Tournaments & Trophies</h1>
-      
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <AIContentCard 
-            title="Ranji Trophy" 
-            prompt="Detailed history and format of the Ranji Trophy. List the most successful teams (like Mumbai) and recent winners."
-          />
-           <AIContentCard 
-            title="Indian Premier League (IPL)" 
-            prompt="Comprehensive overview of the IPL. History since 2008, list of all winning teams by year, impact on Indian cricket, and current team captains."
-            useSearch={true}
-          />
-        </div>
-        <div className="space-y-6">
-          <AdPlaceholder size="sidebar" />
-          <AIContentCard 
-            title="Other Major Trophies" 
-            prompt="Brief summaries of Duleep Trophy, Irani Cup, Vijay Hazare Trophy, and Syed Mushtaq Ali Trophy."
-          />
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const ControversiesPage: React.FC = () => {
-  return (
-    <div className="space-y-6">
-      <div className="bg-red-50 p-6 rounded-xl border border-red-100">
-        <h1 className="text-3xl font-bold text-red-900 mb-2 flex items-center gap-2">
-          <AlertTriangle />
-          Controversies & Challenges
-        </h1>
-        <p className="text-red-700">A timeline of moments that tested the spirit of the game.</p>
-      </div>
-
-      <AIContentCard 
-        title="Major Controversies Timeline" 
-        prompt="Create a timeline of major controversies in Indian cricket history. Include the 2000 Match Fixing scandal, the Monkeygate scandal (2008), the Chappell-Ganguly conflict, and the 2013 IPL spot-fixing scandal. Be objective and factual."
-      />
-      <AdPlaceholder size="leaderboard" />
-    </div>
-  );
-};
-
-// Layout Component
-const Layout: React.FC<{children: React.ReactNode}> = ({ children }) => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
 
   const navItems = [
-    { label: 'Home', path: '/', icon: HomeIcon },
-    { label: 'History', path: '/history', icon: History },
-    { label: 'Players', path: '/players', icon: Users },
-    { label: 'Game Zone', path: '/games', icon: Gamepad2 },
-    { label: 'Associations', path: '/associations', icon: Building2 },
-    { label: 'Tournaments', path: '/tournaments', icon: Trophy },
-    { label: 'Controversies', path: '/controversies', icon: AlertTriangle },
+    { label: 'Home', path: '/', icon: <HomeIcon size={20} /> },
+    { label: 'Players', path: '/players', icon: <Users size={20} /> },
+    { label: 'History', path: '/history', icon: <History size={20} /> },
+    { label: 'Associations', path: '/associations', icon: <Building2 size={20} /> },
+    { label: 'Games', path: '/games', icon: <Gamepad2 size={20} /> },
   ];
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
       {/* Header */}
-      <header className="bg-india-blue text-white shadow-lg sticky top-0 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-india-blue font-bold text-xl">L</div>
-              <span className="text-xl font-bold tracking-tight">LOTUS CRICKET</span>
-            </Link>
-
-            {/* Desktop Nav */}
-            <nav className="hidden md:flex space-x-1">
-              {navItems.map((item) => (
-                <Link 
-                  key={item.path} 
-                  to={item.path}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1 ${location.pathname === item.path ? 'bg-blue-800 text-white' : 'text-blue-100 hover:bg-blue-800'}`}
-                >
-                  <item.icon size={16} />
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-
-            {/* Mobile Menu Button */}
-            <button className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              {mobileMenuOpen ? <X /> : <Menu />}
-            </button>
+      <header className="bg-white shadow-sm sticky top-0 z-40 border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+             <div className="w-8 h-8 bg-india-blue rounded-full flex items-center justify-center">
+                <Dna className="text-white w-5 h-5" />
+             </div>
+             <h1 className="text-xl font-bold tracking-tight text-gray-900">
+               Lotus <span className="text-india-blue">Cricket</span>
+             </h1>
           </div>
+
+          <nav className="hidden md:flex gap-6">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center gap-2 text-sm font-medium transition-colors ${
+                  location.pathname === item.path ? 'text-india-blue bg-blue-50 px-3 py-1.5 rounded-md' : 'text-gray-600 hover:text-india-blue'
+                }`}
+              >
+                {item.icon}
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <button
+            className="md:hidden p-2 text-gray-600"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? <X /> : <Menu />}
+          </button>
         </div>
 
-        {/* Mobile Nav */}
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-blue-800 px-2 pt-2 pb-3 space-y-1">
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="md:hidden absolute top-16 left-0 w-full bg-white border-b border-gray-200 shadow-lg py-4 px-4 flex flex-col gap-4 animate-in slide-in-from-top-2">
             {navItems.map((item) => (
-              <Link 
-                key={item.path} 
+              <Link
+                key={item.path}
                 to={item.path}
-                className="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-700"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={() => setIsMenuOpen(false)}
+                className={`flex items-center gap-3 p-3 rounded-lg ${
+                  location.pathname === item.path ? 'bg-blue-50 text-india-blue' : 'text-gray-700 hover:bg-gray-50'
+                }`}
               >
-                <div className="flex items-center gap-2">
-                  <item.icon size={18} />
-                  {item.label}
-                </div>
+                {item.icon}
+                <span className="font-medium">{item.label}</span>
               </Link>
             ))}
           </div>
@@ -1028,99 +641,460 @@ const Layout: React.FC<{children: React.ReactNode}> = ({ children }) => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-6">
         {children}
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-300">
-        <div className="container mx-auto px-4 py-12">
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Company Info */}
-            <div className="space-y-4">
-              <h3 className="text-2xl font-bold text-white flex items-center gap-2">
-                <div className="w-8 h-8 bg-india-orange rounded-full flex items-center justify-center text-gray-900 text-lg">L</div>
-                Lotus Corporation
-              </h3>
-              <p className="text-sm text-gray-400">
-                Celebrating the spirit of cricket in India. Bringing you closer to the game, the legends, and the history.
-              </p>
-              <div className="space-y-2 pt-2">
-                 <div className="flex items-start gap-3">
-                  <MapPin size={20} className="text-india-orange mt-1 shrink-0" />
-                  <span>CDA Sector 9,<br/>Cuttack 753014, Odisha, India</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Mail size={20} className="text-india-orange" />
-                  <a href="mailto:connect.lotus@gmail.com" className="hover:text-white transition">connect.lotus@gmail.com</a>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Phone size={20} className="text-india-orange" />
-                  <span>+91 84804 47800</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Links & WhatsApp */}
-            <div className="space-y-4">
-              <h4 className="text-lg font-semibold text-white">Connect With Us</h4>
-              <a 
-                href="https://wa.me/918480447800" 
-                target="_blank" 
-                rel="noreferrer"
-                className="flex items-center gap-3 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg w-fit transition"
-              >
-                <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                <span>Chat on WhatsApp</span>
-              </a>
-              <div className="pt-4">
-                 <Link to="/players" className="block text-gray-400 hover:text-white mb-2">Players Directory</Link>
-                 <Link to="/tournaments" className="block text-gray-400 hover:text-white mb-2">Tournament Records</Link>
-                 <Link to="/games" className="block text-gray-400 hover:text-white mb-2">Game Zone</Link>
-                 <Link to="/controversies" className="block text-gray-400 hover:text-white">Controversies</Link>
-              </div>
-            </div>
-
-            {/* Google Maps */}
-            <div className="w-full h-48 bg-gray-800 rounded-lg overflow-hidden relative">
-              <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3738.423985135135!2d85.8828!3d20.4500!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjDCsDI3JzAwLjAiTiA4NcKwNTInNTguMSJF!5e0!3m2!1sen!2sin!4v1600000000000!5m2!1sen!2sin" 
-                width="100%" 
-                height="100%" 
-                style={{border:0}} 
-                allowFullScreen={true} 
-                loading="lazy"
-                title="Office Location"
-              ></iframe>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-500 text-sm">
-            © {new Date().getFullYear()} Lotus Corporation. All rights reserved. <br/>
-            Designed with <span className="text-red-500">♥</span> for Cricket.
-          </div>
+      <footer className="bg-gray-900 text-gray-400 py-8 px-4 mt-auto">
+        <div className="max-w-7xl mx-auto text-center">
+           <p className="mb-2">© 2024 Lotus Cricket. All rights reserved.</p>
+           <div className="flex justify-center gap-4 text-sm">
+              <a href="#" className="hover:text-white">Privacy</a>
+              <a href="#" className="hover:text-white">Terms</a>
+              <a href="#" className="hover:text-white">Contact</a>
+           </div>
         </div>
       </footer>
     </div>
   );
 };
 
+const PlayersPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<'legends' | 'men' | 'women'>('legends');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const getFilteredPlayers = (list: typeof PLAYERS_DB['legends']) => {
+    if (!searchQuery) return list;
+    return list.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.role.toLowerCase().includes(searchQuery.toLowerCase()));
+  };
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  };
+
+  const renderPlayerGrid = (players: typeof PLAYERS_DB['legends']) => {
+    if (players.length === 0) {
+      return (
+        <div className="text-center py-10">
+          <p className="text-gray-500">No players found matching "{searchQuery}"</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {players.map((player) => (
+          <div 
+            key={player.name}
+            onClick={() => navigate(`/player/${encodeURIComponent(player.name)}`)}
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer group overflow-hidden flex flex-col"
+          >
+            <div className={`h-24 ${player.imgColor} opacity-90 relative`}>
+              {/* Decorative Circle */}
+              <div className="absolute -bottom-6 left-6 w-16 h-16 bg-white rounded-full p-1 shadow-md z-10">
+                 <div className={`w-full h-full rounded-full ${player.imgColor} flex items-center justify-center text-white font-bold text-lg`}>
+                    {getInitials(player.name)}
+                 </div>
+              </div>
+            </div>
+            <div className="p-5 pt-8 flex-1 flex flex-col">
+               <h3 className="text-lg font-bold text-gray-900 group-hover:text-india-blue transition-colors">{player.name}</h3>
+               <p className="text-sm text-gray-500 font-medium mb-4">{player.role}</p>
+               <div className="mt-auto pt-4 border-t border-gray-50 flex justify-between items-center text-sm">
+                  <span className="text-gray-400">View Profile</span>
+                  <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                     <ChevronRight size={16} />
+                  </div>
+               </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row justify-between items-end gap-4">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">Player Directory</h2>
+          <p className="text-gray-500 mt-1">Explore the profiles of India's cricketing heroes.</p>
+        </div>
+        
+        {/* Search */}
+        <div className="relative w-full md:w-64">
+           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search size={18} className="text-gray-400" />
+           </div>
+           <input 
+             type="text" 
+             placeholder="Search players..." 
+             className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-india-blue/20 focus:border-india-blue transition"
+             value={searchQuery}
+             onChange={(e) => setSearchQuery(e.target.value)}
+           />
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 overflow-x-auto pb-2 border-b border-gray-100">
+         <button 
+           onClick={() => setActiveTab('legends')}
+           className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'legends' ? 'bg-india-blue text-white shadow-md' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'}`}
+         >
+           <Award size={16} /> Legends
+         </button>
+         <button 
+           onClick={() => setActiveTab('men')}
+           className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'men' ? 'bg-india-blue text-white shadow-md' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'}`}
+         >
+           <User size={16} /> Men's Team
+         </button>
+         <button 
+           onClick={() => setActiveTab('women')}
+           className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === 'women' ? 'bg-india-blue text-white shadow-md' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'}`}
+         >
+           <User size={16} /> Women's Team
+         </button>
+      </div>
+
+      {/* Content */}
+      <div className="min-h-[400px]">
+         {activeTab === 'legends' && renderPlayerGrid(getFilteredPlayers(PLAYERS_DB.legends))}
+         {activeTab === 'men' && renderPlayerGrid(getFilteredPlayers(PLAYERS_DB.men))}
+         {activeTab === 'women' && renderPlayerGrid(getFilteredPlayers(PLAYERS_DB.women))}
+      </div>
+      
+      <AdPlaceholder size="leaderboard" />
+    </div>
+  );
+};
+
+const PlayerProfile: React.FC = () => {
+  const { name } = useParams<{ name: string }>();
+  const [activeTab, setActiveTab] = useState<'overview' | 'stats' | 'news'>('overview');
+  const decodedName = decodeURIComponent(name || 'Unknown Player');
+
+  // Generate a consistent color based on name length for avatar
+  const getAvatarColor = (name: string) => {
+    const colors = ['bg-blue-600', 'bg-green-600', 'bg-purple-600', 'bg-orange-600', 'bg-pink-600', 'bg-teal-600'];
+    return colors[name.length % colors.length];
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      {/* Profile Header */}
+      <div className="bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100 relative">
+        <div className="h-40 bg-gradient-to-r from-gray-900 to-gray-800 relative">
+           <div className="absolute inset-0 bg-pattern opacity-10"></div>
+        </div>
+        
+        <div className="px-6 pb-6 relative">
+          <div className="flex flex-col md:flex-row items-end -mt-16 mb-6 gap-6">
+             {/* Photo Placeholder */}
+             <div className="w-32 h-32 md:w-40 md:h-40 bg-white rounded-2xl p-1.5 shadow-xl relative z-10 rotate-2">
+                <div className={`w-full h-full rounded-xl ${getAvatarColor(decodedName)} flex flex-col items-center justify-center text-white shadow-inner`}>
+                   <User size={48} className="mb-2 opacity-80" />
+                   <span className="text-2xl font-black opacity-40 uppercase tracking-widest">{decodedName.substring(0, 3)}</span>
+                </div>
+                <div className="absolute bottom-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow text-india-blue">
+                   <Target size={16} />
+                </div>
+             </div>
+             
+             <div className="flex-1 pb-2">
+                <div className="flex flex-wrap gap-2 mb-2">
+                   <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wide">Team India</span>
+                   <span className="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wide">Professional Cricketer</span>
+                </div>
+                <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">{decodedName}</h1>
+             </div>
+
+             <div className="hidden md:block pb-4">
+                 <button onClick={() => window.history.back()} className="text-gray-500 hover:text-gray-900 font-medium text-sm">
+                    &larr; Back to List
+                 </button>
+             </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-2 border-b border-gray-100 overflow-x-auto hide-scrollbar">
+            <button 
+              onClick={() => setActiveTab('overview')}
+              className={`px-4 py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'overview' ? 'border-india-orange text-india-orange' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            >
+              <User size={18} /> Overview
+            </button>
+            <button 
+              onClick={() => setActiveTab('stats')}
+              className={`px-4 py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'stats' ? 'border-india-orange text-india-orange' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            >
+              <BarChart3 size={18} /> Stats & Scores
+            </button>
+            <button 
+              onClick={() => setActiveTab('news')}
+              className={`px-4 py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'news' ? 'border-india-orange text-india-orange' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            >
+              <Newspaper size={18} /> News & Media
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      <div className="min-h-[400px]">
+        {activeTab === 'overview' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in slide-in-from-bottom-2 fade-in duration-300">
+             <div className="lg:col-span-2 space-y-6">
+                <AIContentCard 
+                  title="Biography"
+                  prompt={`Write a comprehensive biography for Indian cricketer ${decodedName}. Include sections for Early Life, Domestic Career, and International Debut.`}
+                />
+                <AIContentCard 
+                  title="Life Achievements"
+                  prompt={`List the most significant life achievements and awards (like Arjuna Award, Khel Ratna, etc.) for ${decodedName}.`}
+                  className="border-l-4 border-yellow-400"
+                />
+             </div>
+             <div className="space-y-6">
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                   <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><Trophy size={18} className="text-yellow-500"/> Key Highlights</h3>
+                   <div className="space-y-3">
+                      <div className="bg-gray-50 p-3 rounded-lg text-sm text-gray-700">
+                         Playing Role <br/> 
+                         <span className="font-bold text-gray-900">International Cricketer</span>
+                      </div>
+                      <div className="bg-gray-50 p-3 rounded-lg text-sm text-gray-700">
+                         Country <br/> 
+                         <span className="font-bold text-gray-900">India 🇮🇳</span>
+                      </div>
+                   </div>
+                </div>
+                <AdPlaceholder size="rectangle" />
+             </div>
+          </div>
+        )}
+
+        {activeTab === 'stats' && (
+           <div className="space-y-6 animate-in slide-in-from-bottom-2 fade-in duration-300">
+             <AIContentCard 
+               title="Career Statistics & Scorecard"
+               prompt={`Create a detailed statistical table for ${decodedName} (Cricket). Include columns for Matches, Innings, Runs, Wickets, Average, Strike Rate for Test, ODI, and T20I formats. Display it as a clear markdown table.`}
+               className="overflow-x-auto"
+             />
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <AIContentCard 
+                   title="Batting Analysis"
+                   prompt={`Provide a brief analysis of ${decodedName}'s batting style and strengths.`}
+                />
+                <AIContentCard 
+                   title="Bowling Analysis"
+                   prompt={`Provide a brief analysis of ${decodedName}'s bowling style (if applicable) or fielding contributions.`}
+                />
+             </div>
+           </div>
+        )}
+
+        {activeTab === 'news' && (
+           <div className="space-y-6 animate-in slide-in-from-bottom-2 fade-in duration-300">
+              <AIContentCard 
+                title="Latest Updates"
+                prompt={`What is the latest news, recent match performance, and current status of cricketer ${decodedName}?`}
+                useSearch={true}
+                className="border-l-4 border-green-500"
+              />
+              <AIContentCard 
+                title="Social Media Buzz"
+                prompt={`What are fans saying about ${decodedName} recently on social media? Summarize the sentiment.`}
+              />
+           </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const HomePage: React.FC = () => {
+  const navigate = useNavigate();
+  return (
+    <div className="space-y-8">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-india-blue to-blue-800 text-white p-8 md:p-12 shadow-xl">
+         <div className="relative z-10 max-w-2xl">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">The Heartbeat of <br/><span className="text-india-orange">Indian Cricket</span></h2>
+            <p className="text-blue-100 text-lg mb-8 max-w-md">Live scores, historical archives, and interactive games for every cricket fan.</p>
+            <div className="flex flex-wrap gap-4">
+               <button onClick={() => navigate('/history')} className="bg-white text-india-blue font-bold px-6 py-3 rounded-full shadow-lg hover:bg-gray-100 transition">
+                 Explore History
+               </button>
+               <button onClick={() => navigate('/games')} className="bg-india-orange text-white font-bold px-6 py-3 rounded-full shadow-lg hover:bg-orange-600 transition flex items-center gap-2">
+                 <Gamepad2 size={20} /> Play Games
+               </button>
+            </div>
+         </div>
+         {/* Abstract BG Shapes */}
+         <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
+         <div className="absolute bottom-0 left-0 w-48 h-48 bg-india-orange opacity-10 rounded-full blur-2xl transform -translate-x-1/2 translate-y-1/2"></div>
+      </section>
+
+      {/* Live AI Update */}
+      <AIContentCard 
+        title="Today's Cricket Pulse" 
+        prompt="Give me a 3 bullet point summary of the most important cricket news involving India today. Keep it short and exciting."
+        useSearch={true}
+        className="border-l-4 border-india-orange"
+      />
+
+      {/* Featured Games Preview */}
+      <section>
+        <div className="flex justify-between items-end mb-6">
+           <h3 className="text-2xl font-bold text-gray-900">Fan Zone Games</h3>
+           <Link to="/games" className="text-india-blue font-semibold hover:underline flex items-center gap-1">View All <ChevronRight size={16} /></Link>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+           <div onClick={() => navigate('/ludo')} className="group cursor-pointer bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all border border-gray-100">
+              <div className="h-32 bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+                 <Dice5 size={48} className="text-white opacity-90 group-hover:scale-110 transition-transform" />
+              </div>
+              <div className="p-5">
+                 <h4 className="font-bold text-lg mb-1">Ludo Classic</h4>
+                 <p className="text-gray-500 text-sm">Roll the dice and race to home!</p>
+              </div>
+           </div>
+           
+           <div onClick={() => navigate('/spingo')} className="group cursor-pointer bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all border border-gray-100">
+              <div className="h-32 bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center">
+                 <Target size={48} className="text-white opacity-90 group-hover:scale-110 transition-transform" />
+              </div>
+              <div className="p-5">
+                 <h4 className="font-bold text-lg mb-1">SpinGo Cricket</h4>
+                 <p className="text-gray-500 text-sm">Test your luck with cricket slots.</p>
+              </div>
+           </div>
+
+           <div onClick={() => navigate('/wheel')} className="group cursor-pointer bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all border border-gray-100">
+              <div className="h-32 bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center">
+                 <Disc size={48} className="text-white opacity-90 group-hover:scale-110 transition-transform" />
+              </div>
+              <div className="p-5">
+                 <h4 className="font-bold text-lg mb-1">Win Wheel</h4>
+                 <p className="text-gray-500 text-sm">Spin to reveal your cricket star.</p>
+              </div>
+           </div>
+        </div>
+      </section>
+
+      <AdPlaceholder size="leaderboard" />
+    </div>
+  );
+};
+
+const HistoryPage: React.FC = () => {
+  const navigate = useNavigate();
+  const legends = ['Sachin Tendulkar', 'Virat Kohli', 'MS Dhoni', 'Rohit Sharma', 'Kapil Dev', 'Rahul Dravid'];
+
+  return (
+    <div className="space-y-8">
+      <div className="flex justify-between items-end">
+        <h2 className="text-3xl font-bold text-gray-900">Cricket History</h2>
+      </div>
+
+      <section>
+        <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <Trophy className="text-india-orange" size={20} /> Hall of Fame
+        </h3>
+        <p className="text-sm text-gray-500 mb-4">Click on a legend to view their detailed profile, statistics, and latest news.</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+           {legends.map((player) => (
+             <div 
+               key={player}
+               onClick={() => navigate(`/player/${encodeURIComponent(player)}`)}
+               className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition cursor-pointer text-center group"
+             >
+                <div className="w-16 h-16 bg-blue-50 rounded-full mx-auto mb-3 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
+                   <User size={24} />
+                </div>
+                <h4 className="font-bold text-sm text-gray-800">{player}</h4>
+                <span className="text-xs text-india-blue font-medium mt-1 block opacity-0 group-hover:opacity-100 transition-opacity">View Profile</span>
+             </div>
+           ))}
+        </div>
+      </section>
+
+      <AIContentCard 
+         title="Historical Moments"
+         prompt="Describe 3 distinct historical turning points in Indian Cricket history besides the 1983 and 2011 World Cup wins."
+      />
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <h3 className="font-bold text-xl mb-4 text-india-blue">1983 World Cup</h3>
+            <p className="text-gray-600">The moment that changed Indian cricket forever. Kapil's Devils defeated the mighty West Indies at Lord's.</p>
+         </div>
+         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <h3 className="font-bold text-xl mb-4 text-india-blue">2011 World Cup</h3>
+            <p className="text-gray-600">"Dhoni finishes off in style!" India lifted the cup at home in Mumbai after 28 years.</p>
+         </div>
+      </div>
+    </div>
+  );
+};
+
+const AssociationsPage: React.FC = () => (
+  <div className="space-y-6">
+    <h2 className="text-3xl font-bold text-gray-900">State Associations</h2>
+    <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+       <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+             <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Association</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Headquarters</th>
+             </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+             {[
+               { name: 'Mumbai Cricket Association', state: 'Maharashtra', hq: 'Wankhede Stadium' },
+               { name: 'Delhi & District Cricket Association', state: 'Delhi', hq: 'Arun Jaitley Stadium' },
+               { name: 'Tamil Nadu Cricket Association', state: 'Tamil Nadu', hq: 'M. A. Chidambaram Stadium' },
+               { name: 'Karnataka State Cricket Association', state: 'Karnataka', hq: 'M. Chinnaswamy Stadium' },
+             ].map((assoc, idx) => (
+                <tr key={idx}>
+                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{assoc.name}</td>
+                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{assoc.state}</td>
+                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{assoc.hq}</td>
+                </tr>
+             ))}
+          </tbody>
+       </table>
+    </div>
+  </div>
+);
+
+// --- APP COMPONENT ---
+
 const App: React.FC = () => {
   return (
     <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/history" element={<HistoryPage />} />
-          <Route path="/players" element={<PlayersPage />} />
-          <Route path="/associations" element={<AssociationsPage />} />
-          <Route path="/tournaments" element={<TournamentsPage />} />
-          <Route path="/controversies" element={<ControversiesPage />} />
-          <Route path="/games" element={<GamesPage />} />
-          {/* Redirects or 404 can be added here */}
-          <Route path="/live" element={<Home />} />
-        </Routes>
-      </Layout>
+      <Routes>
+        <Route path="/" element={<Layout><HomePage /></Layout>} />
+        <Route path="/players" element={<Layout><PlayersPage /></Layout>} />
+        <Route path="/history" element={<Layout><HistoryPage /></Layout>} />
+        <Route path="/associations" element={<Layout><AssociationsPage /></Layout>} />
+        <Route path="/games" element={<Layout><HomePage /></Layout>} />
+        
+        {/* Dynamic Player Route */}
+        <Route path="/player/:name" element={<Layout><PlayerProfile /></Layout>} />
+        
+        {/* Full Screen Game Routes */}
+        <Route path="/ludo" element={<LudoClassic onBack={() => window.history.back()} />} />
+        <Route path="/spingo" element={<SpinGo onBack={() => window.history.back()} />} />
+        <Route path="/wheel" element={<WinWheel onBack={() => window.history.back()} />} />
+        
+        <Route path="*" element={<Layout><div className="p-10 text-center">Page Not Found</div></Layout>} />
+      </Routes>
     </Router>
   );
 };
