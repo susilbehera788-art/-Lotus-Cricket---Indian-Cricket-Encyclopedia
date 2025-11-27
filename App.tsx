@@ -1,10 +1,9 @@
-
-import React, { useState, useEffect, Component, ReactNode, ErrorInfo } from 'react';
+import React, { useState, useEffect, ReactNode, ErrorInfo } from 'react';
 import { HashRouter as Router, Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Menu, X, Search, ChevronRight, User, Trophy, Calendar, 
   Newspaper, PlayCircle, BarChart3, Home, Users, BookOpen, 
-  ArrowRight, Award, Zap
+  ArrowRight, Award, Zap, Phone, Mail, MapPin
 } from 'lucide-react';
 import AdPlaceholder from './components/AdPlaceholder';
 
@@ -18,7 +17,7 @@ interface ErrorBoundaryState {
   hasError: boolean;
 }
 
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
@@ -675,6 +674,18 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
       <ScrollToTop />
+
+      {/* Top Bar - Contact Info */}
+      <div className="bg-black text-white text-xs py-2">
+        <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-2">
+          <div className="flex items-center gap-4">
+             <span className="flex items-center gap-1 hover:text-india-orange transition-colors"><Phone size={14} /> +91 8480887880</span>
+             <span className="flex items-center gap-1 hover:text-india-orange transition-colors"><Mail size={14} /> connect.lotuss@gmail.com</span>
+          </div>
+          <div className="hidden md:block opacity-90">Lotuss Corporation - BPO & Telecom Services</div>
+        </div>
+      </div>
+
       <nav className="bg-gradient-to-r from-india-blue to-blue-900 text-white shadow-lg sticky top-0 z-50">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
@@ -733,20 +744,51 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
         {children}
       </main>
 
-      <footer className="bg-gray-900 text-gray-400 py-10 mt-auto">
-        <div className="container mx-auto px-4 text-center">
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <Trophy className="text-white" size={24} />
-            <span className="text-xl font-bold text-white">LOTUS <span className="text-india-orange">CRICKET</span></span>
+      <footer className="bg-gray-900 text-gray-400 py-12 mt-auto border-t border-gray-800">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-3 gap-8 mb-8 text-sm">
+            {/* Column 1: Company Info */}
+            <div className="text-center md:text-left">
+              <h3 className="text-white text-lg font-bold mb-4">Lotuss Corporation</h3>
+              <p className="mb-4 text-gray-400">Company work on BPO and telecom service.</p>
+              <div className="flex justify-center md:justify-start gap-2">
+                 <Trophy className="text-india-blue" />
+                 <span className="font-bold text-white">LOTUS <span className="text-india-orange">CRICKET</span></span>
+              </div>
+            </div>
+
+            {/* Column 2: Contact Info */}
+            <div className="text-center md:text-left">
+              <h3 className="text-white text-lg font-bold mb-4">Contact Us</h3>
+              <ul className="space-y-3">
+                <li className="flex items-start justify-center md:justify-start gap-2">
+                  <MapPin size={16} className="mt-1 flex-shrink-0 text-india-blue" />
+                  <span>plot no- E/325, sec-9, cda, cuttack. 753014</span>
+                </li>
+                <li className="flex items-center justify-center md:justify-start gap-2">
+                  <Phone size={16} className="text-india-blue" />
+                  <span>+91 8480887880</span>
+                </li>
+                <li className="flex items-center justify-center md:justify-start gap-2">
+                  <Mail size={16} className="text-india-blue" />
+                  <span>connect.lotuss@gmail.com</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 3: Quick Links (Existing) */}
+            <div className="text-center md:text-left">
+               <h3 className="text-white text-lg font-bold mb-4">Quick Links</h3>
+               <div className="flex flex-col gap-2">
+                  <Link to="/" className="hover:text-white transition-colors">Home</Link>
+                  <Link to="/players" className="hover:text-white transition-colors">Players</Link>
+                  <Link to="/history" className="hover:text-white transition-colors">History</Link>
+               </div>
+            </div>
           </div>
-          <p className="mb-6 max-w-md mx-auto">Celebrating the spirit of Indian Cricket. From the gallis to the stadiums, we cover it all.</p>
-          <div className="flex justify-center gap-6 mb-8 text-sm font-medium">
-             <Link to="/" className="hover:text-white transition-colors">Home</Link>
-             <Link to="/players" className="hover:text-white transition-colors">Players</Link>
-             <Link to="/history" className="hover:text-white transition-colors">History</Link>
-          </div>
-          <div className="border-t border-gray-800 pt-6">
-            <p>&copy; 2024 Lotus Cricket. All rights reserved.</p>
+
+          <div className="border-t border-gray-800 pt-6 text-center text-sm">
+            <p>&copy; 2024 Lotuss Corporation. All rights reserved.</p>
           </div>
         </div>
       </footer>
